@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useMemo } from "react";
+import { generateTrace } from "./core/engine";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [regex, setRegex] = useState("a+b");
+  const [text, setText] = useState("aaab");
+  const [stepIndex, setStepIndex] = useState(0);
+  const trace = useMemo(() => {
+    return generateTrace(regex, text);
+  }, [regex, text]);
+
+  const currentSnapshot = trace[stepIndex];
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="p-10 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">⏳ Regex Time-Travel</h1>
+
+      {/* first input */}
+      <div className="flex gap-4 mb-8">
+        <input
+          className="border p-2 rounded"
+          value={regex}
+          onChange={(e) => setRegex(e.target.value)}
+        />
+        <input
+          className="border p-2 rounded"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      {/* first checker*/}
+      <div className="mb-4 text-xl font-mono tracking-widest bg-gray-100 p-4 rounded">
+        {text.split("").map((char, i) => (
+          <span
+            key={i}
+            className={
+              i === currentSnapshot?.charIndex
+                ? "bg-yellow-400 text-black font-bold"
+                : "text-gray-500"
+            }
+          >
+            {char}
+          </span>
+        ))}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+      {/* Time Travel */}
+      <input
+        type="range"
+        min="0"
+        max={trace.length - 1}
+        value={stepIndex}
+        onChange={(e) => setStepIndex(Number(e.target.value))}
+        className="w-full"
+      />
+
+      <div className="mt-2 text-sm text-gray-600">
+        Step {stepIndex} / {trace.length}: {"1"}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;

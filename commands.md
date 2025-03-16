@@ -1,3 +1,13 @@
+# Git Commands:
+```sh
+# Create git
+git init
+git config user.email “github email”
+git config user.name “github username”
+git add .
+```
+
+# Commands 
 1. First create the project with vite:
 ```
 # Create the project
@@ -32,8 +42,9 @@ npx tailwindcss init -p
 #Succeeded Force npx to use Tailwind v3 and run the init command to generate the config files.
 npx -y tailwindcss@3 init -p
 
-
+# Succeeded install the Tailwind v4 PostCSS plugin (required if using Tailwind v4 with PostCSS).
 npm install -D @tailwindcss/postcss
+
+# Standard Tailwind + PostCSS dependencies for a Vite project (install if not already installed).
 npm install -D tailwindcss postcss autoprefixer
-kill $(lsof -t -i:5173) 2>/dev/null || true && npm run dev
 ```
