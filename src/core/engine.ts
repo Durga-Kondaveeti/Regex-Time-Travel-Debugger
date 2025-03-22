@@ -18,25 +18,26 @@ function* matchRecursive(
   };
 
   // 2. Logic for different Regex Nodes (Simplified)
-
-  if (index < text.length && text[index] === node.value) {
-    yield {
-      stepId: Date.now(),
-      charIndex: index,
-      nodeId: node.type,
-      type: "MATCH",
-      message: "Character Matched!",
-    };
-    return true; // Match success
-  } else {
-    yield {
-      stepId: Date.now(),
-      charIndex: index,
-      nodeId: node.type,
-      type: "FAIL",
-      message: "Mismatch",
-    };
-    return false; // Backtrack trigger
+  if (node.type === "Character") {
+    if (index < text.length && text[index] === node.value) {
+      yield {
+        stepId: Date.now(),
+        charIndex: index,
+        nodeId: node.type,
+        type: "MATCH",
+        message: "Character Matched!",
+      };
+      return true; // Match success
+    } else {
+      yield {
+        stepId: Date.now(),
+        charIndex: index,
+        nodeId: node.type,
+        type: "FAIL",
+        message: "Mismatch",
+      };
+      return false; // Backtrack trigger
+    }
   }
 
   // ... (Logic for Quantifiers, Groups, Disjunctions would go here)
