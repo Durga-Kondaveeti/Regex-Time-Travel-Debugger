@@ -5,8 +5,14 @@ function App() {
   const [regex, setRegex] = useState("a+b");
   const [text, setText] = useState("aaab");
   const [stepIndex, setStepIndex] = useState(0);
+
+  // Re-run the engine whenever input changes
   const trace = useMemo(() => {
-    return generateTrace(regex, text);
+    try {
+      return generateTrace(regex, text);
+    } catch (e) {
+      return [];
+    }
   }, [regex, text]);
 
   const currentSnapshot = trace[stepIndex];
@@ -15,7 +21,7 @@ function App() {
     <div className="p-10 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">⏳ Regex Time-Travel</h1>
 
-      {/* first input */}
+      {/* Inputs */}
       <div className="flex gap-4 mb-8">
         <input
           className="border p-2 rounded"
@@ -29,14 +35,14 @@ function App() {
         />
       </div>
 
-      {/* first checker*/}
+      {/* The Visualizer */}
       <div className="mb-4 text-xl font-mono tracking-widest bg-gray-100 p-4 rounded">
         {text.split("").map((char, i) => (
           <span
             key={i}
             className={
               i === currentSnapshot?.charIndex
-                ? "bg-yellow-400 text-black font-bold"
+                ? "bg-yellow-400 text-black font-bold" // Highlight current cursor
                 : "text-gray-500"
             }
           >
@@ -45,7 +51,7 @@ function App() {
         ))}
       </div>
 
-      {/* Time Travel */}
+      {/* Time Travel Controls */}
       <input
         type="range"
         min="0"
@@ -56,7 +62,7 @@ function App() {
       />
 
       <div className="mt-2 text-sm text-gray-600">
-        Step {stepIndex} / {trace.length}: {"1"}
+        Step {stepIndex} / {trace.length}: {currentSnapshot?.message}
       </div>
     </div>
   );
