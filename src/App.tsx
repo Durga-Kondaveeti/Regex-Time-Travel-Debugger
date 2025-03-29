@@ -1,68 +1,111 @@
-import { useState, useMemo } from "react";
-import { generateTrace } from "./core/engine";
+import { useState, useMemo, useEffect } from 'react';
+import { generateTrace } from './core/engine';
+import { Controls } from './components/Controls';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 function App() {
-  const [regex, setRegex] = useState("a+b");
-  const [text, setText] = useState("aaab");
+  const [regexStr, setRegexStr] = useState("a+b");
+  const [textStr, setTextStr] = useState("aaab");
+  
+  // Player State
   const [stepIndex, setStepIndex] = useState(0);
 
-  // Re-run the engine whenever input changes
+  // Generate trace only when inputs change
   const trace = useMemo(() => {
     try {
-      return generateTrace(regex, text);
+      // Reset player when inputs change
+      setStepIndex(0);
+      return generateTrace(regexStr, textStr);
     } catch (e) {
+      console.error(e);
       return [];
     }
-  }, [regex, text]);
+  }, [regexStr, textStr]);
 
   const currentSnapshot = trace[stepIndex];
+  const totalSteps = trace.length;
+
+  // Auto-Play Logic
+
+  const handleStep = (delta: number) => {
+    setStepIndex(prev => Math.min(Math.max(prev + delta, 0), totalSteps - 1));
+  };
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">⏳ Regex Time-Travel</h1>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-8">
+      <div className="max-w-3xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            ⏳ Regex Time-Travel
+          </h1>
+          <p className="text-slate-500">Visualizing the engine state, step by step.</p>
+        </header>
 
-      {/* Inputs */}
-      <div className="flex gap-4 mb-8">
-        <input
-          className="border p-2 rounded"
-          value={regex}
-          onChange={(e) => setRegex(e.target.value)}
+        {/* Input Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label className="block text-sm font-semibold mb-2">Regex Pattern</label>
+            <input 
+              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+              value={regexStr} 
+              onChange={e => setRegexStr(e.target.value)}
+              placeholder="e.g. (a+)+"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Test String</label>
+            <input 
+              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
+              value={textStr} 
+              onChange={e => setTextStr(e.target.value)} 
+              placeholder="e.g. aaaaaaa!"
+            />
+          </div>
+        </div>
+
+        {/* Visualization Screen */}
+        <div className="bg-slate-900 rounded-xl p-8 mb-6 shadow-xl relative overflow-hidden">
+          {/* Status Badge */}
+          <div className="absolute top-4 right-4">
+             {currentSnapshot?.type === 'MATCH' && <span className="flex items-center gap-1 text-green-400 font-bold"><CheckCircle2 size={16}/> Match</span>}
+             {currentSnapshot?.type === 'FAIL' && <span className="flex items-center gap-1 text-red-400 font-bold"><AlertCircle size={16}/> Fail</span>}
+          </div>
+
+          {/* The String Display */}
+          <div className="text-3xl font-mono tracking-widest leading-loose break-all text-slate-400">
+            {textStr.split('').map((char, i) => {
+              const isCurrent = i === currentSnapshot?.charIndex;
+              return (
+                <span 
+                  key={i}
+                  className={`
+                    relative inline-block px-1 rounded transition-all duration-200
+                    ${isCurrent ? 'bg-blue-600 text-white scale-110 shadow-lg z-10' : ''}
+                  `}
+                >
+                  {char}
+                  {/* Cursor Indicator */}
+                  {isCurrent && (
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-500 rotate-45"></div>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+
+          {/* Engine Message */}
+          <div className="mt-8 pt-4 border-t border-slate-700 text-slate-300 font-mono text-sm">
+            <span className="text-slate-500">ENGINE LOG: </span>
+            {currentSnapshot ? currentSnapshot.message : "Ready to start..."}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <Controls 
+          currentStep={stepIndex}
+          totalSteps={totalSteps}
+          onSeek={setStepIndex}
         />
-        <input
-          className="border p-2 rounded"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-      </div>
-
-      {/* The Visualizer */}
-      <div className="mb-4 text-xl font-mono tracking-widest bg-gray-100 p-4 rounded">
-        {text.split("").map((char, i) => (
-          <span
-            key={i}
-            className={
-              i === currentSnapshot?.charIndex
-                ? "bg-yellow-400 text-black font-bold" // Highlight current cursor
-                : "text-gray-500"
-            }
-          >
-            {char}
-          </span>
-        ))}
-      </div>
-
-      {/* Time Travel Controls */}
-      <input
-        type="range"
-        min="0"
-        max={trace.length - 1}
-        value={stepIndex}
-        onChange={(e) => setStepIndex(Number(e.target.value))}
-        className="w-full"
-      />
-
-      <div className="mt-2 text-sm text-gray-600">
-        Step {stepIndex} / {trace.length}: {currentSnapshot?.message}
       </div>
     </div>
   );
