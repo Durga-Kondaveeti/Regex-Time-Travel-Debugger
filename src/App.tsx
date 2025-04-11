@@ -1,20 +1,22 @@
-import { useState, useMemo, useEffect } from 'react';
-import { generateTrace } from './core/engine';
-import { Controls } from './components/Controls';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from "react";
+import { generateTrace } from "./core/engine";
+import { Controls } from "./components/Controls";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 function App() {
   const [regexStr, setRegexStr] = useState("a+b");
   const [textStr, setTextStr] = useState("aaab");
-  
+
   // Player State
   const [stepIndex, setStepIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Generate trace only when inputs change
   const trace = useMemo(() => {
     try {
       // Reset player when inputs change
       setStepIndex(0);
+      setIsPlaying(false);
       return generateTrace(regexStr, textStr);
     } catch (e) {
       console.error(e);
@@ -26,9 +28,24 @@ function App() {
   const totalSteps = trace.length;
 
   // Auto-Play Logic
+  useEffect(() => {
+    let interval: number;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setStepIndex((prev) => {
+          if (prev >= totalSteps - 1) {
+            setIsPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 100); // 100ms per step speed
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, totalSteps]);
 
   const handleStep = (delta: number) => {
-    setStepIndex(prev => Math.min(Math.max(prev + delta, 0), totalSteps - 1));
+    setStepIndex((prev) => Math.min(Math.max(prev + delta, 0), totalSteps - 1));
   };
 
   return (
@@ -38,26 +55,32 @@ function App() {
           <h1 className="text-3xl font-bold flex items-center gap-2">
             ⏳ Regex Time-Travel
           </h1>
-          <p className="text-slate-500">Visualizing the engine state, step by step.</p>
+          <p className="text-slate-500">
+            Visualizing the engine state, step by step.
+          </p>
         </header>
 
         {/* Input Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
-            <label className="block text-sm font-semibold mb-2">Regex Pattern</label>
-            <input 
-              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-              value={regexStr} 
-              onChange={e => setRegexStr(e.target.value)}
+            <label className="block text-sm font-semibold mb-2">
+              Regex Pattern
+            </label>
+            <input
+              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              value={regexStr}
+              onChange={(e) => setRegexStr(e.target.value)}
               placeholder="e.g. (a+)+"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2">Test String</label>
-            <input 
-              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-              value={textStr} 
-              onChange={e => setTextStr(e.target.value)} 
+            <label className="block text-sm font-semibold mb-2">
+              Test String
+            </label>
+            <input
+              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              value={textStr}
+              onChange={(e) => setTextStr(e.target.value)}
               placeholder="e.g. aaaaaaa!"
             />
           </div>
@@ -67,20 +90,32 @@ function App() {
         <div className="bg-slate-900 rounded-xl p-8 mb-6 shadow-xl relative overflow-hidden">
           {/* Status Badge */}
           <div className="absolute top-4 right-4">
-             {currentSnapshot?.type === 'MATCH' && <span className="flex items-center gap-1 text-green-400 font-bold"><CheckCircle2 size={16}/> Match</span>}
-             {currentSnapshot?.type === 'FAIL' && <span className="flex items-center gap-1 text-red-400 font-bold"><AlertCircle size={16}/> Fail</span>}
+            {currentSnapshot?.type === "MATCH" && (
+              <span className="flex items-center gap-1 text-green-400 font-bold">
+                <CheckCircle2 size={16} /> Match
+              </span>
+            )}
+            {currentSnapshot?.type === "FAIL" && (
+              <span className="flex items-center gap-1 text-red-400 font-bold">
+                <AlertCircle size={16} /> Fail
+              </span>
+            )}
           </div>
 
           {/* The String Display */}
           <div className="text-3xl font-mono tracking-widest leading-loose break-all text-slate-400">
-            {textStr.split('').map((char, i) => {
+            {textStr.split("").map((char, i) => {
               const isCurrent = i === currentSnapshot?.charIndex;
               return (
-                <span 
+                <span
                   key={i}
                   className={`
                     relative inline-block px-1 rounded transition-all duration-200
-                    ${isCurrent ? 'bg-blue-600 text-white scale-110 shadow-lg z-10' : ''}
+                    ${
+                      isCurrent
+                        ? "bg-blue-600 text-white scale-110 shadow-lg z-10"
+                        : ""
+                    }
                   `}
                 >
                   {char}
@@ -101,10 +136,17 @@ function App() {
         </div>
 
         {/* Controls */}
-        <Controls 
+        <Controls
+          isPlaying={isPlaying}
           currentStep={stepIndex}
           totalSteps={totalSteps}
+          onTogglePlay={() => setIsPlaying(!isPlaying)}
+          onStep={handleStep}
           onSeek={setStepIndex}
+          onReset={() => {
+            setIsPlaying(false);
+            setStepIndex(0);
+          }}
         />
       </div>
     </div>
