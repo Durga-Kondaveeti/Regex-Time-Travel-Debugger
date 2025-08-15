@@ -1,57 +1,116 @@
-import { RegExpParser } from "regexpp";
-import type { Snapshot } from "./types";
+export type StepType = 'start' | 'match' | 'fail' | 'success' | 'finish';
 
-function* matchRecursive(
-  node: any,
-  text: string,
-  index: number,
-  path: string[]
-): Generator<Snapshot, boolean, unknown> {
-  yield {
-    stepId: Date.now(),
-    charIndex: index,
-    nodeId: node.type,
-    type: "ADVANCE",
-    message: `Checking ${node.type} against char '${text[index]}'`,
-  };
-
-  if (node.type === "Character") {
-    if (index < text.length && text[index] === node.value) {
-      yield {
-        stepId: Date.now(),
-        charIndex: index,
-        nodeId: node.type,
-        type: "MATCH",
-        message: "Character Matched!",
-      };
-      return true;
-    } else {
-      yield {
-        stepId: Date.now(),
-        charIndex: index,
-        nodeId: node.type,
-        type: "FAIL",
-        message: "Mismatch",
-      };
-      return false;
-    }
-  }
-
-  return false;
+export interface Step {
+  id: number;
+  type: StepType;
+  regexIndex: number; 
+  stringIndex: number; 
+  message: string;
+  depth: number;
 }
 
-export function generateTrace(regexPattern: string, text: string): Snapshot[] {
-  const parser = new RegExpParser();
-  const ast = parser.parsePattern(regexPattern);
 
-  const iterator = matchRecursive(ast, text, 0, []);
-  const steps: Snapshot[] = [];
 
-  for (const step of iterator) {
-    steps.push(step);
+export class TimeTravelEngine {
+  steps: Step[] = [];
+  stepId = 0;
+  maxSteps = 2000; 
 
-    if (steps.length > 10000) break;
+  log(type: StepType, rIdx: number, sIdx: number, msg: string, depth: number) {
+    if (this.steps.length >= this.maxSteps) return;
+    this.steps.push({
+      id: this.stepId++,
+      type,
+      regexIndex: rIdx,
+      stringIndex: sIdx,
+      message: msg,
+      depth
+    });
   }
 
-  return steps;
+  
+  run(pattern: string, text: string): Step[] {
+    this.steps = [];
+    this.stepId = 0;
+    
+    let matchFound = false;
+
+    
+    
+    for (let startIdx = 0; startIdx <= text.length; startIdx++) {
+      
+      
+      if (this.steps.length >= this.maxSteps) break;
+
+      this.log('start', 0, startIdx, `Attempting match starting at index ${startIdx}...`, 0);
+
+    }  
+    if (!matchFound) {
+      this.log('finish', 0, text.length, 'No match found in entire string.', 0);
+    } else {
+      this.log('finish', 0, 0, 'Execution Completed', 0);
+    }
+
+    return this.steps;
+  }
+
+  matchRecursive(pattern: string, text: string, pIdx: number, tIdx: number, depth: number): boolean {
+    if (this.steps.length >= this.maxSteps) return false;
+
+    
+    if (pIdx >= pattern.length) {
+      this.log('success', pIdx, tIdx, `Match found ending at index ${tIdx}!`, depth);
+      return true;
+    }
+
+    const currentPatternChar = pattern[pIdx];
+    const isStar = (pIdx + 1 < pattern.length) && pattern[pIdx + 1] === '*';
+    const isPlus = (pIdx + 1 < pattern.length) && pattern[pIdx + 1] === '+';
+    
+    
+    this.log('start', pIdx, tIdx, `Trying to match '${currentPatternChar}'`, depth);
+
+    
+    if (isStar || isPlus) {
+       const charToMatch = currentPatternChar;
+       const nextPIdx = pIdx + 2; 
+       
+       
+       let maxConsume = 0;
+       while (tIdx + maxConsume < text.length && 
+             (text[tIdx + maxConsume] === charToMatch || charToMatch === '.')) {
+         maxConsume++;
+       }
+
+       
+       if (isPlus && maxConsume === 0) {
+          this.log('fail', pIdx, tIdx, `+ requires at least one '${charToMatch}'`, depth);
+          return false;
+       }
+
+       
+       for (let i = maxConsume; i >= (isPlus ? 1 : 0); i--) {
+          this.log('match', pIdx, tIdx + i, `Quantifier consumed ${i} chars. Recursing...`, depth);
+          
+          if (this.matchRecursive(pattern, text, nextPIdx, tIdx + i, depth + 1)) {
+            return true;
+          }
+          
+       }
+       
+       return false;
+    }
+
+    
+    if (tIdx < text.length && (pattern[pIdx] === '.' || pattern[pIdx] === text[tIdx])) {
+       this.log('match', pIdx, tIdx, `Matched '${text[tIdx]}'`, depth);
+       if (this.matchRecursive(pattern, text, pIdx + 1, tIdx + 1, depth + 1)) {
+         return true;
+       }
+    }
+
+    
+    this.log('fail', pIdx, tIdx, 'Mismatch', depth);
+    return false;
+  }
 }

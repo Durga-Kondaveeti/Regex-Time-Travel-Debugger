@@ -25,8 +25,6 @@ export const Visualizer = ({ regex, text, currentStep }: VisualizerProps) => {
                 "inline-block px-1 rounded transition-colors duration-200",
                 index === rIdx && type === 'match' && "bg-success/20 text-success border border-success",
                 index === rIdx && type === 'fail' && "bg-accent/20 text-accent border border-accent",
-                index === rIdx && type === 'backtrack' && "bg-yellow-500/20 text-yellow-500 border border-yellow-500",
-                index === rIdx && !['match', 'fail', 'backtrack'].includes(type || '') && "bg-primary/20 text-primary"
               )}
             >
               {char}
