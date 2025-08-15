@@ -39,7 +39,7 @@ npm error A complete log of this run can be found in: /Users/dk/.npm/_logs/2025-
 # This command failed with npm error could not determine executable to run (npx couldn't pick an executable for the package version it chose).
 npx tailwindcss init -p
 
-#Succeeded Force npx to use Tailwind v3 and run the init command to generate the config files.
+# Succeeded Force npx to use Tailwind v3 and run the init command to generate the config files.
 npx -y tailwindcss@3 init -p
 
 # Succeeded install the Tailwind v4 PostCSS plugin (required if using Tailwind v4 with PostCSS).
@@ -48,3 +48,4 @@ npm install -D @tailwindcss/postcss
 # Standard Tailwind + PostCSS dependencies for a Vite project (install if not already installed).
 npm install -D tailwindcss postcss autoprefixer
 ```
+

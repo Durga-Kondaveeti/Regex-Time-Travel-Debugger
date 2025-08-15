@@ -1,154 +1,180 @@
-import { useState, useMemo, useEffect } from "react";
-import { generateTrace } from "./core/engine";
+import { useState, useEffect, useMemo } from "react";
+import { TimeTravelEngine, type Step } from "./core/engine";
 import { Controls } from "./components/Controls";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 
 function App() {
-  const [regexStr, setRegexStr] = useState("a+b");
-  const [textStr, setTextStr] = useState("aaab");
+  const [regexStr, setRegexStr] = useState("a+b+c");
+  const [textStr, setTextStr] = useState("aaabbbc");
 
-  // Player State
+  
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [result, setResult] = useState<{ isMatch: boolean; match: string }>({
+    isMatch: false,
+    match: "",
+  });
 
-  // Generate trace only when inputs change
-  const trace = useMemo(() => {
-    try {
-      // Reset player when inputs change
-      setStepIndex(0);
-      setIsPlaying(false);
-      return generateTrace(regexStr, textStr);
-    } catch (e) {
-      console.error(e);
-      return [];
-    }
-  }, [regexStr, textStr]);
+  
+  const engine = useMemo(() => new TimeTravelEngine(), []);
 
-  const currentSnapshot = trace[stepIndex];
-  const totalSteps = trace.length;
+  
+  useEffect(() => {
+    
+    setIsPlaying(false);
+    setStepIndex(0);
 
-  // Auto-Play Logic
+    
+    const generatedSteps = engine.run(regexStr, textStr);
+    setSteps(generatedSteps);
+
+    
+    
+    const successStep = generatedSteps.find((step) => step.type === "success");
+    const isMatch = !!successStep;
+
+    
+    
+    
+    let matchText = "";
+    
+        const nativeMatch = textStr.match(new RegExp(regexStr));
+        matchText = nativeMatch ? nativeMatch[0] : textStr;
+  
+    
+
+    setResult({ isMatch, match: matchText });
+  }, [regexStr, textStr, engine]);
+
+  
+  const currentStep: Step | null = steps[stepIndex] || null;
+
+  
   useEffect(() => {
     let interval: number;
     if (isPlaying) {
       interval = setInterval(() => {
         setStepIndex((prev) => {
-          if (prev >= totalSteps - 1) {
+          if (prev >= steps.length - 1) {
             setIsPlaying(false);
             return prev;
           }
           return prev + 1;
         });
-      }, 100); // 100ms per step speed
+      }, 500); 
     }
     return () => clearInterval(interval);
-  }, [isPlaying, totalSteps]);
-
-  const handleStep = (delta: number) => {
-    setStepIndex((prev) => Math.min(Math.max(prev + delta, 0), totalSteps - 1));
-  };
+  }, [isPlaying, steps.length]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-8">
-      <div className="max-w-3xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            ⏳ Regex Time-Travel
-          </h1>
-          <p className="text-slate-500">
-            Visualizing the engine state, step by step.
-          </p>
-        </header>
+    <div className="min-h-screen pb-40">
+      {/* Header */}
+      <header className="p-6 border-b border-slate-800 bg-surface/50 backdrop-blur-md sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center text-xl font-bold">
+              ⏳
+            </div>
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              Regex Time-Travel
+            </h1>
+          </div>
+          
+        </div>
+      </header>
 
-        {/* Input Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Regex Pattern
+      <main className="max-w-6xl mx-auto p-6">
+        {/* INPUT SECTION */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+              Regular Expression
             </label>
             <input
-              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={regexStr}
               onChange={(e) => setRegexStr(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 font-mono text-lg focus:ring-2 focus:ring-primary outline-none transition"
               placeholder="e.g. (a+)+"
             />
+            <p className="text-xs text-gray-500 flex items-center gap-1">
+              <Info size={12} /> Supports literals, ., *, +
+            </p>
           </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
               Test String
             </label>
             <input
-              className="w-full p-3 font-mono border border-slate-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={textStr}
               onChange={(e) => setTextStr(e.target.value)}
-              placeholder="e.g. aaaaaaa!"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 font-mono text-lg focus:ring-2 focus:ring-primary outline-none transition"
+              placeholder="String to match..."
             />
           </div>
         </div>
 
-        {/* Visualization Screen */}
-        <div className="bg-slate-900 rounded-xl p-8 mb-6 shadow-xl relative overflow-hidden">
-          {/* Status Badge */}
-          <div className="absolute top-4 right-4">
-            {currentSnapshot?.type === "MATCH" && (
-              <span className="flex items-center gap-1 text-green-400 font-bold">
-                <CheckCircle2 size={16} /> Match
-              </span>
-            )}
-            {currentSnapshot?.type === "FAIL" && (
-              <span className="flex items-center gap-1 text-red-400 font-bold">
-                <AlertCircle size={16} /> Fail
-              </span>
-            )}
+        {/* STATUS BAR */}
+        <div className="flex items-center justify-between mb-8 bg-black/20 p-4 rounded-lg border border-white/5">
+          <div className="flex items-center gap-3">
+            <span
+              className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                currentStep?.type === "backtrack"
+                  ? "bg-accent/20 text-accent"
+                  : currentStep?.type === "success"
+                  ? "bg-success/20 text-success"
+                  : "bg-blue-500/20 text-blue-400"
+              }`}
+            >
+              {currentStep?.type || "READY"}
+            </span>
+            <span className="font-mono text-sm text-gray-300">
+              {currentStep?.message || "Enter regex to start"}
+            </span>
           </div>
-
-          {/* The String Display */}
-          <div className="text-3xl font-mono tracking-widest leading-loose break-all text-slate-400">
-            {textStr.split("").map((char, i) => {
-              const isCurrent = i === currentSnapshot?.charIndex;
-              return (
-                <span
-                  key={i}
-                  className={`
-                    relative inline-block px-1 rounded transition-all duration-200
-                    ${
-                      isCurrent
-                        ? "bg-blue-600 text-white scale-110 shadow-lg z-10"
-                        : ""
-                    }
-                  `}
-                >
-                  {char}
-                  {/* Cursor Indicator */}
-                  {isCurrent && (
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-2 h-2 bg-blue-500 rotate-45"></div>
-                  )}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* Engine Message */}
-          <div className="mt-8 pt-4 border-t border-slate-700 text-slate-300 font-mono text-sm">
-            <span className="text-slate-500">ENGINE LOG: </span>
-            {currentSnapshot ? currentSnapshot.message : "Ready to start..."}
-          </div>
+          {steps.length >= 2000 && (
+            <div className="flex items-center gap-2 text-accent text-sm font-bold animate-pulse">
+              <AlertTriangle size={16} />
+              CATASTROPHIC BACKTRACKING DETECTED
+            </div>
+          )}
         </div>
 
-        {/* Controls */}
-        <Controls
-          isPlaying={isPlaying}
-          currentStep={stepIndex}
-          totalSteps={totalSteps}
-          onTogglePlay={() => setIsPlaying(!isPlaying)}
-          onStep={handleStep}
-          onSeek={setStepIndex}
-          onReset={() => {
-            setIsPlaying(false);
-            setStepIndex(0);
-          }}
-        />
-      </div>
+        {/* VISUALIZATION AREA */}
+        <Visualizer regex={regexStr} text={textStr} currentStep={currentStep} />
+
+        {/* Result Status Display */}
+        {steps.length > 0 && stepIndex === steps.length - 1 && (
+          <div
+            className={`mt-6 p-4 rounded-lg border-2 text-center transition-all duration-500 ${
+              result.isMatch
+                ? "bg-green-50 border-green-500 text-green-900"
+                : "bg-red-50 border-red-500 text-red-900"
+            }`}
+          >
+            <h3 className="text-xl font-bold mb-2">
+              {result.isMatch ? "Match Found! 🎉" : "No Match Found 🚫"}
+            </h3>
+
+            {result.isMatch && (
+              <div className="text-lg">
+                Output:{" "}
+                <span className="bg-yellow-300 text-black px-2 py-1 rounded font-mono shadow-sm">
+                  {result.match}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* FOOTER CONTROLS */}
+      <Controls
+        totalSteps={steps.length}
+        currentStepIndex={stepIndex}
+        isPlaying={isPlaying}
+        onPlayPause={() => setIsPlaying(!isPlaying)}
+        onStepChange={setStepIndex}
+      />
     </div>
   );
 }
