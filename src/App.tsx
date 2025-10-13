@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { TimeTravelEngine, type Step } from "./lib/engine";
+import { TimeTravelEngine, type Step } from "./core/engine";
 import { Visualizer } from "./components/Visualizer";
 import { Controls } from "./components/Controls";
 import { AlertTriangle, Info } from "lucide-react";
@@ -8,7 +8,7 @@ function App() {
   const [regexStr, setRegexStr] = useState("a+b+c");
   const [textStr, setTextStr] = useState("aaabbbc");
 
-  // State for playback and results
+  
   const [steps, setSteps] = useState<Step[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -17,27 +17,27 @@ function App() {
     match: "",
   });
 
-  // Initialize Engine
+  
   const engine = useMemo(() => new TimeTravelEngine(), []);
 
-  // Run engine whenever inputs change
+  
   useEffect(() => {
-    // Stop playback
+    
     setIsPlaying(false);
     setStepIndex(0);
 
-    // 1. Run the engine
+    
     const generatedSteps = engine.run(regexStr, textStr);
     setSteps(generatedSteps);
 
-    // 2. Determine Success
-    // We look for ANY step that indicates success
+    
+    
     const successStep = generatedSteps.find((step) => step.type === "success");
     const isMatch = !!successStep;
 
-    // 3. Determine Matched String
-    // We use standard JS Regex to extract the exact substring for the display
-    // because the engine steps might not contain the substring text directly.
+    
+    
+    
     let matchText = "";
     if (isMatch) {
       try {
@@ -51,10 +51,10 @@ function App() {
     setResult({ isMatch, match: matchText });
   }, [regexStr, textStr, engine]);
 
-  // Define currentStep safely
+  
   const currentStep: Step | null = steps[stepIndex] || null;
 
-  // Auto-play logic
+  
   useEffect(() => {
     let interval: number;
     if (isPlaying) {
@@ -66,7 +66,7 @@ function App() {
           }
           return prev + 1;
         });
-      }, 500); // Speed: 1.5 seconds
+      }, 500); 
     }
     return () => clearInterval(interval);
   }, [isPlaying, steps.length]);
