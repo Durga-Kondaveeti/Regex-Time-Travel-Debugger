@@ -1,4 +1,4 @@
-export type StepType = 'start' | 'match' | 'fail' | 'success' | 'finish';
+export type StepType = 'start' | 'match' | 'fail' | 'backtrack' | 'success' | 'finish';
 
 export interface Step {
   id: number;
@@ -8,8 +8,6 @@ export interface Step {
   message: string;
   depth: number;
 }
-
-
 
 export class TimeTravelEngine {
   steps: Step[] = [];
@@ -44,8 +42,24 @@ export class TimeTravelEngine {
 
       this.log('start', 0, startIdx, `Attempting match starting at index ${startIdx}...`, 0);
 
-    }  
-    if (!matchFound) {
+      
+      if (this.matchRecursive(pattern, text, 0, startIdx, 0)) {
+        matchFound = true;
+        break; 
+      }
+    }
+    
+    
+    if (this.steps.length >= this.maxSteps) {
+      this.steps.push({
+        id: this.stepId++,
+        type: 'fail',
+        regexIndex: 0,
+        stringIndex: 0,
+        message: 'Catastrophic Backtracking Detected! Execution halted.',
+        depth: 0
+      });
+    } else if (!matchFound) {
       this.log('finish', 0, text.length, 'No match found in entire string.', 0);
     } else {
       this.log('finish', 0, 0, 'Execution Completed', 0);
@@ -96,6 +110,7 @@ export class TimeTravelEngine {
             return true;
           }
           
+          this.log('backtrack', pIdx, tIdx + i, `Backtracking from ${i} consumption`, depth);
        }
        
        return false;
@@ -107,6 +122,8 @@ export class TimeTravelEngine {
        if (this.matchRecursive(pattern, text, pIdx + 1, tIdx + 1, depth + 1)) {
          return true;
        }
+       this.log('backtrack', pIdx, tIdx, 'Backtracking single char', depth);
+       return false;
     }
 
     
