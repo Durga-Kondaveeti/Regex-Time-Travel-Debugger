@@ -5,6 +5,10 @@ git init
 git config user.email “github email”
 git config user.name “github username”
 git add .
+git commit
+# Then, generate token for your github see this: https://medium.com/@mbohlip/how-to-generate-a-classic-personal-access-token-in-github-04985b5432c7
+git remote add origin https://<TOKEN_CLASSIC>@<GIT_REPO>
+git push -f origin main
 ```
 
 # Commands 
@@ -48,4 +52,6 @@ npm install -D @tailwindcss/postcss
 # Standard Tailwind + PostCSS dependencies for a Vite project (install if not already installed).
 npm install -D tailwindcss postcss autoprefixer
 ```
+
+
 
