@@ -8,7 +8,6 @@ function App() {
   const [regexStr, setRegexStr] = useState("a+b+c");
   const [textStr, setTextStr] = useState("aaabbbc");
 
-  
   const [steps, setSteps] = useState<Step[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -17,27 +16,18 @@ function App() {
     match: "",
   });
 
-  
   const engine = useMemo(() => new TimeTravelEngine(), []);
 
-  
   useEffect(() => {
-    
     setIsPlaying(false);
     setStepIndex(0);
 
-    
     const generatedSteps = engine.run(regexStr, textStr);
     setSteps(generatedSteps);
 
-    
-    
     const successStep = generatedSteps.find((step) => step.type === "success");
     const isMatch = !!successStep;
 
-    
-    
-    
     let matchText = "";
     if (isMatch) {
       try {
@@ -51,10 +41,8 @@ function App() {
     setResult({ isMatch, match: matchText });
   }, [regexStr, textStr, engine]);
 
-  
   const currentStep: Step | null = steps[stepIndex] || null;
 
-  
   useEffect(() => {
     let interval: number;
     if (isPlaying) {
@@ -66,7 +54,7 @@ function App() {
           }
           return prev + 1;
         });
-      }, 500); 
+      }, 500);
     }
     return () => clearInterval(interval);
   }, [isPlaying, steps.length]);
