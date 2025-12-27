@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# Regex Time-Travel Debugger ⏳
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Live Demo:** [https://durga-kondaveeti.github.io/Regex-Time-Travel-Debugger/](https://durga-kondaveeti.github.io/Regex-Time-Travel-Debugger/)
 
-Currently, two official plugins are available:
+A visual, interactive tool to understand the "hidden life" of Regular Expressions. This project breaks down the execution of a regex engine step-by-step, helping developers visualize backtracking, recursion, and pattern matching in real-time.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*(Note: You can replace this image link with a real screenshot of your app later)*
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 💡 Why I Built This
 
-## Expanding the ESLint configuration
+Regular Expressions (Regex) often feel like "magic"—you type a pattern, and it either matches or it doesn't. But underneath, the engine is performing a complex dance of consumption, validation, and backtracking.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+I built this project because:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+* **The internal logic is fascinating:** I wanted to see exactly *how* a regex engine traverses a string, character by character.
+* **Visual learning is faster:** It is much easier for beginners to learn Regex concepts (especially "greedy" vs. "lazy" matching) when they can watch the engine make decisions in real-time.
+* **Debugging is hard:** Understanding why a specific regex fails (or runs infinitely in catastrophic backtracking) is nearly impossible without visualizing the steps.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## ✨ Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+* **Step-by-Step Visualization:** Watch the regex engine consume characters and move through the pattern state-by-state.
+* **"Time Travel" Controls:** Play, pause, and scrub through the timeline of the execution.
+* **Backtracking Visuals:** Clearly highlights when the engine hits a dead end and has to "backtrack" to try a different path.
+* **Adjustable Speed:** Slow down the animation (1.5s per step) to follow the logic or speed it up to see the result.
+* **Success/Failure Status:** clearly indicates if the pattern successfully matched the text or failed after exhausting all options.
+* **Catastrophic Backtracking Detection:** Warns users if a pattern is generating excessive steps (infinite loops).
+
+## 📖 How to Use
+
+1. Open the [Live Website](https://durga-kondaveeti.github.io/Regex-Time-Travel-Debugger/).
+2. Enter a **Regular Expression** in the first box.
+3. Enter a **Test String** in the second box.
+4. Click the **Play** button or use the slider to move through the steps manually.
+
+### Examples to Try
+
+**Example 1: The Greedy Match**
+
+* **Regex:** `a+b+c`
+* **String:** `aaabbbc`
+* *What to watch:* See how `a+` greedily eats all the 'a's, then hands control over to `b+`.
+
+**Example 2: The Backtrack**
+
+* **Regex:** `Zsa`
+* **String:** `aaZaZsab`
+* *What to watch:* The engine will scan the string. It will try to match 'Z' at index 0 (fail), index 1 (fail), index 2 (match!), but then fail on 's', causing it to backtrack and resume searching later in the string until it finally succeeds at the end.
+
+## 🛠️ Local Development Setup
+
+Follow these steps to run the project on your local machine.
+
+**Prerequisites:**
+
+* Node.js (v14 or higher)
+* npm or yarn
+
+**Installation:**
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/durga-kondaveeti/Regex-Time-Travel-Debugger.git
+cd Regex-Time-Travel-Debugger
+
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+2. **Install dependencies:**
+```bash
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+
+
+3. **Start the development server:**
+```bash
+npm run dev
+
+```
+
+
+4. **Open in Browser:**
+The terminal will show a local URL (usually `http://localhost:5173`). Open that link to start debugging!
+
+## 🔮 Future Features
+
+* **Escape Character Analysis:** Support for `\d`, `\w`, `\s` and escaped literals (e.g., `\.`).
+* **Capture Groups:** Visualizing how `( )` groups store data during execution.
+* **Lazy Quantifiers:** Adding support for `*?` and `+?` to visualize non-greedy matching.
+
+## 🤝 Contributing
+
+Contributions are welcome! If you have ideas for better visualization or new engine features, feel free to open an issue or submit a pull request.
+
+---
+
+*Built with ❤️ by Durga Shankar Kondaveeti*
